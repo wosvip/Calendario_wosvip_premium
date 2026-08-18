@@ -141,7 +141,7 @@ O calendário será instalado como um aplicativo independente.
 
 # 🆕 Versão Atual
 
-## Versão 3.0 Premium
+## Versão 3.2 Premium
 
 ### Melhorias
 
