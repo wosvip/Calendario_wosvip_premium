@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="Calendário WosVIP com semanas ISO e feriados do Brasil.">
+
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./assets/icons/icone-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/icons/icone-192.png">
+  <link rel="stylesheet" href="./css/style.css?v=3.2.0">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Calendário WosVIP">
+
+  <title>Calendário WosVIP</title>
+</head>
+
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-icon" src="./assets/icons/icone-192.png" alt="">
+        <div class="brand-text">
+          <h1>Calendário</h1>
+          <p id="dataAtualCabecalho">Carregando data...</p><span class="version-badge">v3.2</span>
+        </div>
+      </div>
+
+      <button id="btnAgendaTopo" class="today-button" type="button" aria-pressed="false">Agenda</button>
+    </header>
+
+
+    <section id="diarioView" class="diario-view" aria-label="Agenda de atividades" hidden>
+      <div class="diario-toolbar">
+        <button id="diarioAnterior" class="diario-nav" type="button" aria-label="Semana anterior">‹</button>
+        <div class="diario-title">
+          <span>Agenda de atividades</span>
+          <strong id="diarioPeriodo">Semana atual</strong>
+        </div>
+        <button id="diarioSeguinte" class="diario-nav" type="button" aria-label="Próxima semana">›</button>
+      </div>
+      <button id="diarioHoje" class="diario-today" type="button">Ir para esta semana</button>
+
+      <div id="diarioPapel" class="diario-paper">
+        <div class="diario-binding" aria-hidden="true"></div>
+        <div id="diarioDias" class="diario-days"></div>
+      </div>
+      <p class="diario-hint">Deslize para a esquerda ou direita para virar a semana.</p>
+    </section>
+
+    <section class="controls" aria-label="Seleção do calendário">
+      <button id="mesAnterior" class="nav-button" type="button" aria-label="Mês anterior">‹</button>
+
+      <div class="field">
+        <label for="mes">Mês</label>
+        <select id="mes" aria-label="Selecionar mês"></select>
+      </div>
+
+      <div class="field">
+        <label for="ano">Ano</label>
+        <select id="ano" aria-label="Selecionar ano"></select>
+      </div>
+
+      <button id="mesSeguinte" class="nav-button" type="button" aria-label="Próximo mês">›</button>
+    </section>
+
+    <section class="calendar-shell" aria-label="Calendário mensal">
+      <table>
+        <thead>
+          <tr>
+            <th class="week-col">Sem</th>
+            <th class="sunday">Dom</th>
+            <th>Seg</th>
+            <th>Ter</th>
+            <th>Qua</th>
+            <th>Qui</th>
+            <th>Sex</th>
+            <th class="saturday">Sáb</th>
+          </tr>
+        </thead>
+        <tbody id="calendario"></tbody>
+      </table>
+    </section>
+
+    <section id="dataSelecionada" class="selected-info" aria-live="polite">
+      <div class="selected-icon" aria-hidden="true">📅</div>
+      <div class="selected-content">
+        <span class="selected-label">Hoje</span>
+        <strong id="selectedTitle">Carregando...</strong>
+        <small id="selectedSubtitle">Nenhum evento cadastrado.</small>
+      </div>
+    </section>
+
+    <section class="month-summary" aria-label="Resumo do mês">
+      <div>
+        <span>Dias</span>
+        <strong id="resumoDias">—</strong>
+      </div>
+      <div>
+        <span>Semanas</span>
+        <strong id="resumoSemanas">—</strong>
+      </div>
+      <div>
+        <span>Feriados</span>
+        <strong id="resumoFeriados">—</strong>
+      </div>
+      <div>
+        <span>Hoje</span>
+        <strong id="resumoHoje">—</strong>
+      </div>
+    </section>
+
+
+    <section class="agenda-card" aria-label="Agenda de compromissos">
+      <div class="agenda-header">
+        <div>
+          <span class="agenda-kicker">Agenda</span>
+          <h2>Compromissos</h2>
+        </div>
+        <button id="btnNovoCompromisso" class="agenda-add" type="button">+ Novo</button>
+      </div>
+
+      <div id="agendaDia" class="agenda-day">
+        <p class="agenda-empty">Selecione um dia para consultar ou cadastrar compromissos.</p>
+      </div>
+
+      <div class="agenda-next">
+        <div class="agenda-next-title">Próximos compromissos</div>
+        <div id="proximosCompromissos"></div>
+      </div>
+
+      <button id="btnNotificacoes" class="notification-button" type="button">🔔 Ativar alertas no aparelho</button>
+      <small id="statusNotificacoes" class="notification-status">Os alertas serão disparados enquanto o PWA estiver ativo.</small>
+    </section>
+
+    <div id="agendaModal" class="agenda-modal" hidden>
+      <div class="agenda-modal-backdrop" data-fechar-modal="true"></div>
+      <section class="agenda-dialog" role="dialog" aria-modal="true" aria-labelledby="agendaModalTitulo">
+        <div class="agenda-dialog-header">
+          <div>
+            <span class="agenda-kicker">Agenda WosVIP</span>
+            <h2 id="agendaModalTitulo">Novo compromisso</h2>
+          </div>
+          <button id="btnFecharAgenda" class="agenda-close" type="button" aria-label="Fechar">×</button>
+        </div>
+
+        <form id="agendaForm">
+          <input id="eventoId" type="hidden">
+
+          <label class="agenda-field">
+            <span>Título</span>
+            <input id="eventoTitulo" type="text" maxlength="80" required placeholder="Ex.: Reunião de manutenção">
+          </label>
+
+          <div class="agenda-grid-2">
+            <label class="agenda-field">
+              <span>Data</span>
+              <input id="eventoData" type="date" required>
+            </label>
+            <label class="agenda-field">
+              <span>Início</span>
+              <input id="eventoHoraInicio" type="time" required>
+            </label>
+          </div>
+
+          <div class="agenda-grid-2">
+            <label class="agenda-field">
+              <span>Fim (opcional)</span>
+              <input id="eventoHoraFim" type="time">
+            </label>
+            <label class="agenda-field">
+              <span>Alerta</span>
+              <select id="eventoLembrete">
+                <option value="0">No horário</option>
+                <option value="10">10 min antes</option>
+                <option value="30">30 min antes</option>
+                <option value="60">1 hora antes</option>
+                <option value="120">2 horas antes</option>
+                <option value="1440">1 dia antes</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="agenda-field">
+            <span>Local (opcional)</span>
+            <input id="eventoLocal" type="text" maxlength="100" placeholder="Ex.: Oficina, sala 2">
+          </label>
+
+          <label class="agenda-field">
+            <span>Descrição (opcional)</span>
+            <textarea id="eventoDescricao" rows="3" maxlength="500" placeholder="Observações do compromisso"></textarea>
+          </label>
+
+          <div class="agenda-actions">
+            <button id="btnExcluirCompromisso" class="agenda-delete" type="button" hidden>Excluir</button>
+            <button class="agenda-cancel" type="button" data-fechar-modal="true">Cancelar</button>
+            <button class="agenda-save" type="submit">Salvar compromisso</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+
+    <div id="diarioModal" class="agenda-modal" hidden>
+      <div class="agenda-modal-backdrop" data-fechar-diario="true"></div>
+      <section class="agenda-dialog diario-dialog" role="dialog" aria-modal="true" aria-labelledby="diarioModalTitulo">
+        <div class="agenda-dialog-header">
+          <div>
+            <span class="agenda-kicker">Diário de trabalho</span>
+            <h2 id="diarioModalTitulo">Nova atividade</h2>
+          </div>
+          <button id="btnFecharDiario" class="agenda-close" type="button" aria-label="Fechar">×</button>
+        </div>
+
+        <form id="diarioForm">
+          <input id="atividadeId" type="hidden">
+
+          <label class="agenda-field">
+            <span>Data</span>
+            <input id="atividadeData" type="date" required>
+          </label>
+
+          <label class="agenda-field">
+            <span>Atividade realizada</span>
+            <input id="atividadeTitulo" type="text" maxlength="120" required placeholder="Ex.: Manutenção preventiva no equipamento">
+          </label>
+
+          <div class="agenda-grid-2">
+            <label class="agenda-field">
+              <span>Início (opcional)</span>
+              <input id="atividadeInicio" type="time">
+            </label>
+            <label class="agenda-field">
+              <span>Fim (opcional)</span>
+              <input id="atividadeFim" type="time">
+            </label>
+          </div>
+
+          <label class="agenda-field">
+            <span>Observações (opcional)</span>
+            <textarea id="atividadeObservacao" rows="4" maxlength="800" placeholder="Detalhes do serviço executado"></textarea>
+          </label>
+
+          <div class="agenda-actions">
+            <button id="btnExcluirAtividade" class="agenda-delete" type="button" hidden>Excluir</button>
+            <button class="agenda-cancel" type="button" data-fechar-diario="true">Cancelar</button>
+            <button class="agenda-save" type="submit">Salvar atividade</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="developer">
+      Desenvolvido por: <strong>WosVIP®</strong>
+    </div>
+
+    <section class="holidays-card">
+      <h2>Feriados do mês</h2>
+      <p class="holiday-subtitle">
+        Feriados nacionais, datas observadas e pontos facultativos.
+      </p>
+
+      <ul id="listaFeriados"></ul>
+
+      <div class="legend" aria-label="Legenda">
+        <span><i class="today-key"></i> Hoje</span>
+        <span><i class="holiday-key"></i> Feriado</span>
+        <span><i class="week-key"></i> Semana atual</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="./js/holidays.js?v=3.2.0"></script>
+  <script src="./js/calendar.js?v=3.2.0"></script>
+  <script src="./js/agenda.js?v=3.2.0"></script>
+  <script src="./js/app.js?v=3.2.0"></script>
+  <script src="./js/diario.js?v=3.2.0"></script>
+</body>
+</html>
